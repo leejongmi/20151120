@@ -225,3 +225,83 @@ if __name__ == '__main__':
             # processing temperature
             temp_process(xml_raw)
 ```
+
+#### exercise 4
+   - openTSDB API 호출하고 json 형식의 데이터를 파싱
+   - 호출 url
+```sh
+http://125.7.128.53:4242/#start=10m-ago&m=sum:gyu_RC1_thl.temperature%7Bnodeid=2454%7D&o=&key=out%20bottom%20center%20box&wxh=600x300&autoreload=15
+```
+
+   - json 형식의 데이터 호출
+```sh
+http://125.7.128.53:4242/api/query?start=10m-ago&m=sum:gyu_RC1_thl.temperature%7Bnodeid=2454%7D&o=&key=out%20bottom%20center%20box&wxh=600x300&autoreload=15
+```
+
+
+```sh
+
+#!/usr/bin/python
+
+import sys
+import urllib2
+import json
+import struct
+import time
+from datetime import datetime, timedelta
+
+url = 'http://125.7.128.53:4242/api/query?start=10m-ago&m=sum:gyu_RC1_thl.temperature%7Bnodeid=2454%7D&o=&key=out%20bottom%20center%20box&wxh=600x300&autoreload=15'
+
+def dataParser(s):
+        s = s.split("{")
+        i = 0
+        j = len(s)
+        if j > 2:
+                s = s[3].replace("}","")
+                s = s.replace("]","")
+        else:
+                return '0:0,0:0'
+        return s
+
+if __name__ == '__main__':
+        while 1 :
+                t = time.localtime()
+                tsec = t.tm_sec
+
+                if tsec%10!=0 :
+                        print tsec
+                        time.sleep(0.8)
+                else :
+                        #endTimeUnix = time.time()
+                        #startTimeUnix = endTimeUnix - 1800 
+
+                        #startTime = datetime.fromtimestamp(startTimeUnix).strftime('%Y/%m/%d-%H:%M:%S')
+                        #endTime = datetime.fromtimestamp(endTimeUnix).strftime('%Y/%m/%d-%H:%M:%S')
+
+                        #print startTime
+                        #print endTime
+
+                        #metric = 'cc_100.test'
+                        #url = 'http://127.0.0.1:4242/api/query?start=' + startTime + '&end=' + endTime + '&m=sum:' + metric
+                        #print url
+
+                        try:
+                                u = urllib2.urlopen(url)
+                        except:
+                                raise NameError('url error')
+
+                        data = u.read()
+                        #print data
+                        packets = dataParser(data)
+                        packet = packets.split(',')
+
+                        j=len(packet)
+
+                        v_s = packet[0].split(":")
+                        v_e = packet[j-1].split(":")
+
+                        print v_s[0], v_s[1]
+                        #print "cc.test %d %d" % ( endTimeUnix, v_e )
+                        time.sleep(0.8)
+
+```
